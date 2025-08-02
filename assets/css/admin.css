@@ -1,0 +1,52 @@
+/* Estilos para a página de produtos do Google Feed */
+.wc-google-feed-products-table img {
+    max-width: 40px !important;
+    max-height: 40px !important;
+    width: auto !important;
+    height: auto !important;
+    border-radius: 4px;
+}
+
+.wc-google-feed-products-table td {
+    vertical-align: middle !important;
+    padding: 12px 8px !important;
+}
+
+.wc-google-feed-products-table .thumbnail-cell {
+    text-align: center;
+    width: 60px;
+}
+
+.wc-google-feed-products-table .product-info {
+    line-height: 1.4;
+}
+
+.wc-google-feed-products-table .product-info strong {
+    display: block;
+    margin-bottom: 4px;
+}
+
+.wc-google-feed-products-table .product-info small {
+    color: #666;
+    display: block;
+    font-size: 11px;
+}
+
+.wc-google-feed-products-table select {
+    width: 100% !important;
+    max-width: 200px;
+    font-size: 13px;
+}
+
+.wc-google-feed-products-table .no-image {
+    width: 40px;
+    height: 40px;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #999;
+    border-radius: 4px;
+    margin: 0 auto;
+}
