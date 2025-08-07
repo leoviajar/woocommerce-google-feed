@@ -33,6 +33,7 @@ class WC_Google_Feed_XML {
             wp_die("WooCommerce não está ativo");
         }
         
+        ob_clean();
         header("Content-Type: application/xml; charset=utf-8");
         
         $produtos = $this->get_products();
@@ -181,8 +182,8 @@ class WC_Google_Feed_XML {
             echo '<g:id>' . $produto->get_id() . '</g:id>' . "\n";
         }
         
-        if ($dados['preco']) {
-            echo '<g:price>' . $dados['preco'] . ' BRL</g:price>' . "\n";
+        if ($dados['preco_regular']) {
+            echo '<g:price>' . $dados['preco_regular'] . ' BRL</g:price>' . "\n";
         }
         
         if (!empty($dados['preco_promocional']) && !empty($dados['preco_regular']) && 
@@ -264,6 +265,18 @@ class WC_Google_Feed_XML {
         $dados['preco'] = $produto->get_price() ? $produto->get_price() : '';
         $dados['preco_regular'] = $produto->get_regular_price() ? $produto->get_regular_price() : '';
         $dados['preco_promocional'] = $produto->get_sale_price() ? $produto->get_sale_price() : '';
+        if ($produto->is_type('variable')) {
+            $prices = $produto->get_variation_prices(true);
+            if (!empty($prices['price'])) {
+                $dados['preco'] = min($prices['price']);
+            }
+            if (!empty($prices['regular_price'])) {
+                $dados['preco_regular'] = min($prices['regular_price']);
+            }
+            if (!empty($prices['sale_price'])) {
+                $dados['preco_promocional'] = min($prices['sale_price']);
+            }
+        }
         $dados['sku'] = $produto->get_sku() ? $produto->get_sku() : '';
         $dados['status_estoque'] = $produto->get_stock_status();
         
