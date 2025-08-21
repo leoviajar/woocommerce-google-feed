@@ -310,7 +310,7 @@ class WC_Google_Feed_XML {
         }
         
         if (empty($gtin)) {
-            $gtin_fields = array('_gtin', '_upc', '_ean', '_isbn', 'gtin', 'upc', 'ean', 'isbn');
+            $gtin_fields = array('_global_unique_id', '_gtin', '_upc', '_ean', '_isbn', 'gtin', 'upc', 'ean', 'isbn');
             foreach ($gtin_fields as $field) {
                 $gtin = get_post_meta($produto->get_id(), $field, true);
                 if (!empty($gtin)) {
