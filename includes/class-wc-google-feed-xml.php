@@ -24,7 +24,112 @@ class WC_Google_Feed_XML {
         return htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, "UTF-8");
     }
 
-    
+    /**
+     * Obtém o nome de exibição de um atributo de produto.
+     *
+     * @param WC_Product $product O objeto do produto.
+     * @param string     $attribute_key A chave do atributo (ex: 'pa_tamanho', 'attribute_tamanho').
+     * @param string     $attribute_value O valor do atributo (slug ou valor cru).
+     * @return string O nome de exibição do atributo ou o valor original como fallback.
+     */
+    private function get_attribute_pretty_name($product, $attribute_key, $attribute_value) {
+        $pretty_name = $attribute_value; // Fallback para o valor cru
+
+        // Log de entrada para depuração
+        error_log(sprintf('DEBUG: get_attribute_pretty_name - Key: %s, Value: %s', $attribute_key, $attribute_value));
+
+        // Limpa a chave do atributo para obter o nome da taxonomia
+        $taxonomy_name = str_replace('attribute_', '', $attribute_key);
+
+        // Tenta obter o termo da taxonomia global pelo slug
+        if (taxonomy_exists($taxonomy_name)) {
+            error_log(sprintf('DEBUG: taxonomy_exists(%s) is true.', $taxonomy_name));
+            $term = get_term_by('slug', $attribute_value, $taxonomy_name);
+            if ($term && !is_wp_error($term)) {
+                error_log(sprintf('DEBUG: Found term by slug: %s', $term->name));
+                return $term->name;
+            } else {
+                error_log(sprintf('DEBUG: Term not found by slug for taxonomy %s, value %s. Error: %s', $taxonomy_name, $attribute_value, is_wp_error($term) ? $term->get_error_message() : 'Not found'));
+                // Se o slug não funcionar, tenta buscar pelo ID do termo (se o valor for numérico)
+                if (is_numeric($attribute_value)) {
+                    error_log(sprintf('DEBUG: Value %s is numeric, trying to get term by ID.', $attribute_value));
+                    $term = get_term_by('id', (int)$attribute_value, $taxonomy_name);
+                    if ($term && !is_wp_error($term)) {
+                        error_log(sprintf('DEBUG: Found term by ID: %s', $term->name));
+                        return $term->name;
+                    } else {
+                        error_log(sprintf('DEBUG: Term not found by ID for taxonomy %s, value %s. Error: %s', $taxonomy_name, $attribute_value, is_wp_error($term) ? $term->get_error_message() : 'Not found'));
+                    }
+                }
+                // Tenta buscar pelo nome (para casos onde o valor já é o nome)
+                error_log(sprintf('DEBUG: Trying to get term by name for taxonomy %s, value %s.', $taxonomy_name, $attribute_value));
+                $term = get_term_by('name', $attribute_value, $taxonomy_name);
+                if ($term && !is_wp_error($term)) {
+                    error_log(sprintf('DEBUG: Found term by name: %s', $term->name));
+                    return $term->name;
+                } else {
+                    error_log(sprintf('DEBUG: Term not found by name for taxonomy %s, value %s. Error: %s', $taxonomy_name, $attribute_value, is_wp_error($term) ? $term->get_error_message() : 'Not found'));
+                }
+            }
+        } else {
+            error_log(sprintf('DEBUG: taxonomy_exists(%s) is false.', $taxonomy_name));
+        }
+
+        // Para atributos personalizados (não taxonomias globais)
+        // Pega todos os atributos do produto (incluindo os personalizados)
+        $product_attributes = $product->get_attributes();
+        error_log(sprintf('DEBUG: Product attributes: %s', print_r(array_keys($product_attributes), true)));
+
+        // Verifica se a chave do atributo existe nos atributos do produto
+        if (isset($product_attributes[$attribute_key])) {
+            error_log(sprintf('DEBUG: Attribute key %s found in product attributes.', $attribute_key));
+            $attribute_obj = $product_attributes[$attribute_key];
+            
+            // Se o atributo é uma taxonomia (pode ser global ou personalizada)
+            if ($attribute_obj->is_taxonomy()) {
+                error_log(sprintf('DEBUG: Attribute %s is a taxonomy. Name: %s', $attribute_key, $attribute_obj->get_name()));
+                $term = get_term_by('slug', $attribute_value, $attribute_obj->get_name());
+                if ($term && !is_wp_error($term)) {
+                    error_log(sprintf('DEBUG: Found term by slug for product taxonomy: %s', $term->name));
+                    return $term->name;
+                } else {
+                    error_log(sprintf('DEBUG: Term not found by slug for product taxonomy %s, value %s. Error: %s', $attribute_obj->get_name(), $attribute_value, is_wp_error($term) ? $term->get_error_message() : 'Not found'));
+                    // Tenta buscar pelo ID do termo para atributos de taxonomia
+                    if (is_numeric($attribute_value)) {
+                        error_log(sprintf('DEBUG: Value %s is numeric, trying to get term by ID for product taxonomy.', $attribute_value));
+                        $term = get_term_by('id', (int)$attribute_value, $attribute_obj->get_name());
+                        if ($term && !is_wp_error($term)) {
+                            error_log(sprintf('DEBUG: Found term by ID for product taxonomy: %s', $term->name));
+                            return $term->name;
+                        } else {
+                            error_log(sprintf('DEBUG: Term not found by ID for product taxonomy %s, value %s. Error: %s', $attribute_obj->get_name(), $attribute_value, is_wp_error($term) ? $term->get_error_message() : 'Not found'));
+                        }
+                    }
+                    // Tenta buscar pelo nome
+                    error_log(sprintf('DEBUG: Trying to get term by name for product taxonomy %s, value %s.', $attribute_obj->get_name(), $attribute_value));
+                    $term = get_term_by('name', $attribute_value, $attribute_obj->get_name());
+                    if ($term && !is_wp_error($term)) {
+                        error_log(sprintf('DEBUG: Found term by name for product taxonomy: %s', $term->name));
+                        return $term->name;
+                    } else {
+                        error_log(sprintf('DEBUG: Term not found by name for product taxonomy %s, value %s. Error: %s', $attribute_obj->get_name(), $attribute_value, is_wp_error($term) ? $term->get_error_message() : 'Not found'));
+                    }
+                }
+            } else {
+                // Se for um atributo personalizado (não taxonomia), o valor já é o nome
+                // ou o valor cru que deve ser usado diretamente.
+                error_log(sprintf('DEBUG: Attribute %s is NOT a taxonomy. Returning original value: %s', $attribute_key, $attribute_value));
+                return $attribute_value;
+            }
+        } else {
+            error_log(sprintf('DEBUG: Attribute key %s NOT found in product attributes.', $attribute_key));
+        }
+
+        // Se todas as tentativas falharem, retorna o valor original
+        error_log(sprintf('DEBUG: All attempts failed for %s. Returning fallback: %s', $attribute_key, $pretty_name));
+        return $pretty_name;
+    }
+
     /**
      * Gerar feed XML
      */
@@ -198,8 +303,52 @@ class WC_Google_Feed_XML {
         if ($dados['stock_quantity']) {
             echo '<g:quantity>' . $dados['stock_quantity'] . '</g:quantity>' . "\n";
         }
+
+        $variation_mode = get_option("wc_google_feed_variation_mode", "parent_only");
+
+        if ($produto->is_type('variation')) {
+            $attributes = $produto->get_variation_attributes();
+
+            foreach ($attributes as $key => $value) {
+                if (empty($value)) continue;
+
+                $pretty_name = $this->get_attribute_pretty_name($produto, $key, $value);
+
+                if (stripos($key, 'tamanho') !== false) {
+                    $dados['size'] = $pretty_name;
+                } elseif (stripos($key, 'cor') !== false) {
+                    $dados['color'] = $pretty_name;
+                }
+            }
+        } elseif ($produto->is_type('variable')) {
+            $attributes = $produto->get_attributes();
+
+            foreach ($attributes as $key => $attribute_obj) {
+                if (!$attribute_obj->get_variation()) continue;
+
+                $options = $attribute_obj->get_options();
+                if (empty($options)) continue;
+
+                $value = $options[0];
+                $pretty_name = $this->get_attribute_pretty_name($produto, $key, $value);
+
+                if (stripos($key, 'tamanho') !== false) {
+                    $dados['size'] = $pretty_name;
+                } elseif (stripos($key, 'cor') !== false) {
+                    $dados['color'] = $pretty_name;
+                }
+            }
+        }
         
-        if (!empty($dados['gtin'])) {
+        if (!empty($dados["color"])) {
+            echo "<g:color>" . $this->safe_xml_escape($dados["color"]) . "</g:color>" . "\n";
+        }
+
+        if (!empty($dados["size"])) {
+            echo "<g:size>" . $this->safe_xml_escape($dados["size"]) . "</g:size>" . "\n";
+        }
+        
+        if (!empty($dados["gtin"])) {
             echo '<g:gtin>' . $this->safe_xml_escape($dados['gtin']) . '</g:gtin>' . "\n";
         }
         
@@ -255,12 +404,7 @@ class WC_Google_Feed_XML {
         
         $dados['titulo'] = $produto->get_name() ? $produto->get_name() : '';
         $dados["descricao"] = wp_strip_all_tags($produto->get_description());
-        if ($produto->is_type('variation') && empty($dados["descricao"])) {
-            $parent_product = wc_get_product($produto->get_parent_id());
-            if ($parent_product) {
-                $dados["descricao"] = wp_strip_all_tags($parent_product->get_description());
-            }
-        }
+
         $dados['link'] = get_permalink($produto->get_id());
         $dados['preco'] = $produto->get_price() ? $produto->get_price() : '';
         $dados['preco_regular'] = $produto->get_regular_price() ? $produto->get_regular_price() : '';
