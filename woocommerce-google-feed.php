@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WooCommerce Feed XML
  * Description: Plugin para gerar feed XML de produtos WooCommerce com categorias do Google Shopping
- * Version: 1.0.3
+ * Version: 1.0.4
  * Author: Leonardo
  * License: GPL v2 or later
  * Text Domain: wc-google-feed
