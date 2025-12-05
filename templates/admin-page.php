@@ -16,6 +16,10 @@ if (isset($_POST["save_settings"]) && wp_verify_nonce($_POST["wc_google_feed_set
         $image_mode = sanitize_text_field($_POST["image_mode"]);
         update_option("wc_google_feed_image_mode", $image_mode);
         
+        // Salvar opção de variantes no título
+        $title_variants = sanitize_text_field($_POST["title_variants"]);
+        update_option("wc_google_feed_title_variants", $title_variants);
+        
         // Salvar token de segurança
         if (isset($_POST["security_token"]) && !empty($_POST["security_token"])) {
             $security_token = sanitize_text_field($_POST["security_token"]);
@@ -84,13 +88,25 @@ $total_variations = wp_count_posts("product_variation")->publish;
                 </div>
 
                 <div style="margin-bottom: 20px;">
+                    <h4><?php _e("Variantes no Título", "wc-google-feed"); ?></h4>
+                    <?php $title_variants = get_option("wc_google_feed_title_variants", "disabled"); ?>
+                    <select name="title_variants">
+                        <option value="disabled" <?php selected($title_variants, "disabled"); ?>><?php _e("Desabilitado", "wc-google-feed"); ?></option>
+                        <option value="color_size" <?php selected($title_variants, "color_size"); ?>><?php _e("Adicionar Cor e Tamanho", "wc-google-feed"); ?></option>
+                        <option value="color_only" <?php selected($title_variants, "color_only"); ?>><?php _e("Apenas Cor", "wc-google-feed"); ?></option>
+                        <option value="size_only" <?php selected($title_variants, "size_only"); ?>><?php _e("Apenas Tamanho", "wc-google-feed"); ?></option>
+                    </select>
+                    <p class="description" style="margin-top: 5px;"><?php _e("Adiciona cor e/ou tamanho ao título do produto. Ex: 'Camiseta Básica, Preto - G'. Recomendado pelo Google para variações.", "wc-google-feed"); ?></p>
+                </div>
+
+                <div style="margin-bottom: 20px;">
                     <h4><?php _e("Token de Segurança", "wc-google-feed"); ?></h4>
                     <?php $current_token = get_option("wc_google_feed_security_token", ""); ?>
                     <div style="display: flex; align-items: center;">
-                        <input type="text" name="security_token" value="<?php echo esc_attr($current_token); ?>" readonly style="width: 300px; margin-right: 10px;">
+                        <input type="text" name="security_token" id="security_token_input" value="<?php echo esc_attr($current_token); ?>" readonly style="width: 300px; margin-right: 10px; background: #f0f0f0; cursor: not-allowed;">
                         <button type="button" id="generate-token" class="button"><?php _e("Gerar Novo Token", "wc-google-feed"); ?></button>
                     </div>
-                    <p class="description" style="margin-top: 5px;"><?php _e("Token usado na URL do feed para segurança. Exemplo: feed-token.xml", "wc-google-feed"); ?></p>
+                    <p class="description" style="margin-top: 5px;"><?php _e("Token de segurança gerado automaticamente. Clique em 'Gerar Novo Token' apenas se precisar invalidar o link atual.", "wc-google-feed"); ?></p>
                 </div>
             </div>
             

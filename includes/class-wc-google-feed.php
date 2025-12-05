@@ -94,44 +94,18 @@ class WC_Google_Feed {
         new WC_Google_Feed_Meta_Box();
         new WC_Google_Feed_Public();
         
-        // Rewrite rules para o feed
-        add_action('init', array($this, 'add_feed_rewrite_rules'));
-        add_filter('query_vars', array($this, 'add_feed_query_vars'));
-        add_action('template_redirect', array($this, 'handle_feed_request'));
-    }
-    
-    /**
-     * Adicionar regras de rewrite para o feed
-     */
-    public function add_feed_rewrite_rules() {
-        add_rewrite_rule('^feed\.xml$', 'index.php?wc_google_feed=1', 'top');
-    }
-    
-    /**
-     * Adicionar query vars
-     */
-    public function add_feed_query_vars($vars) {
-        $vars[] = 'wc_google_feed';
-        return $vars;
-    }
-    
-    /**
-     * Processar requisição do feed
-     */
-    public function handle_feed_request() {
-        if (get_query_var('wc_google_feed')) {
-            $xml_generator = new WC_Google_Feed_XML();
-            $xml_generator->generate_feed();
-            exit;
-        }
+        // Nota: Rewrite rules e handlers do feed estão em WC_Google_Feed_Public
     }
     
     /**
      * Ativação do plugin
      */
     public function activate() {
+        // Adicionar rewrite rules via classe Public
+        $public = new WC_Google_Feed_Public();
+        $public->add_rewrite_rules();
+        
         // Flush rewrite rules
-        $this->add_feed_rewrite_rules();
         flush_rewrite_rules();
     }
     

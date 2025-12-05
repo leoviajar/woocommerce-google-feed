@@ -26,107 +26,58 @@ class WC_Google_Feed_XML {
 
     /**
      * Obtém o nome de exibição de um atributo de produto.
-     *
-     * @param WC_Product $product O objeto do produto.
-     * @param string     $attribute_key A chave do atributo (ex: 'pa_tamanho', 'attribute_tamanho').
-     * @param string     $attribute_value O valor do atributo (slug ou valor cru).
-     * @return string O nome de exibição do atributo ou o valor original como fallback.
      */
     private function get_attribute_pretty_name($product, $attribute_key, $attribute_value) {
-        $pretty_name = $attribute_value; // Fallback para o valor cru
+        $pretty_name = $attribute_value;
 
-        // Log de entrada para depuração
-        error_log(sprintf('DEBUG: get_attribute_pretty_name - Key: %s, Value: %s', $attribute_key, $attribute_value));
-
-        // Limpa a chave do atributo para obter o nome da taxonomia
         $taxonomy_name = str_replace('attribute_', '', $attribute_key);
 
-        // Tenta obter o termo da taxonomia global pelo slug
         if (taxonomy_exists($taxonomy_name)) {
-            error_log(sprintf('DEBUG: taxonomy_exists(%s) is true.', $taxonomy_name));
             $term = get_term_by('slug', $attribute_value, $taxonomy_name);
             if ($term && !is_wp_error($term)) {
-                error_log(sprintf('DEBUG: Found term by slug: %s', $term->name));
                 return $term->name;
-            } else {
-                error_log(sprintf('DEBUG: Term not found by slug for taxonomy %s, value %s. Error: %s', $taxonomy_name, $attribute_value, is_wp_error($term) ? $term->get_error_message() : 'Not found'));
-                // Se o slug não funcionar, tenta buscar pelo ID do termo (se o valor for numérico)
-                if (is_numeric($attribute_value)) {
-                    error_log(sprintf('DEBUG: Value %s is numeric, trying to get term by ID.', $attribute_value));
-                    $term = get_term_by('id', (int)$attribute_value, $taxonomy_name);
-                    if ($term && !is_wp_error($term)) {
-                        error_log(sprintf('DEBUG: Found term by ID: %s', $term->name));
-                        return $term->name;
-                    } else {
-                        error_log(sprintf('DEBUG: Term not found by ID for taxonomy %s, value %s. Error: %s', $taxonomy_name, $attribute_value, is_wp_error($term) ? $term->get_error_message() : 'Not found'));
-                    }
-                }
-                // Tenta buscar pelo nome (para casos onde o valor já é o nome)
-                error_log(sprintf('DEBUG: Trying to get term by name for taxonomy %s, value %s.', $taxonomy_name, $attribute_value));
-                $term = get_term_by('name', $attribute_value, $taxonomy_name);
+            }
+            
+            if (is_numeric($attribute_value)) {
+                $term = get_term_by('id', (int)$attribute_value, $taxonomy_name);
                 if ($term && !is_wp_error($term)) {
-                    error_log(sprintf('DEBUG: Found term by name: %s', $term->name));
                     return $term->name;
-                } else {
-                    error_log(sprintf('DEBUG: Term not found by name for taxonomy %s, value %s. Error: %s', $taxonomy_name, $attribute_value, is_wp_error($term) ? $term->get_error_message() : 'Not found'));
                 }
             }
-        } else {
-            error_log(sprintf('DEBUG: taxonomy_exists(%s) is false.', $taxonomy_name));
+            
+            $term = get_term_by('name', $attribute_value, $taxonomy_name);
+            if ($term && !is_wp_error($term)) {
+                return $term->name;
+            }
         }
 
-        // Para atributos personalizados (não taxonomias globais)
-        // Pega todos os atributos do produto (incluindo os personalizados)
         $product_attributes = $product->get_attributes();
-        error_log(sprintf('DEBUG: Product attributes: %s', print_r(array_keys($product_attributes), true)));
 
-        // Verifica se a chave do atributo existe nos atributos do produto
         if (isset($product_attributes[$attribute_key])) {
-            error_log(sprintf('DEBUG: Attribute key %s found in product attributes.', $attribute_key));
             $attribute_obj = $product_attributes[$attribute_key];
             
-            // Se o atributo é uma taxonomia (pode ser global ou personalizada)
             if ($attribute_obj->is_taxonomy()) {
-                error_log(sprintf('DEBUG: Attribute %s is a taxonomy. Name: %s', $attribute_key, $attribute_obj->get_name()));
                 $term = get_term_by('slug', $attribute_value, $attribute_obj->get_name());
                 if ($term && !is_wp_error($term)) {
-                    error_log(sprintf('DEBUG: Found term by slug for product taxonomy: %s', $term->name));
                     return $term->name;
-                } else {
-                    error_log(sprintf('DEBUG: Term not found by slug for product taxonomy %s, value %s. Error: %s', $attribute_obj->get_name(), $attribute_value, is_wp_error($term) ? $term->get_error_message() : 'Not found'));
-                    // Tenta buscar pelo ID do termo para atributos de taxonomia
-                    if (is_numeric($attribute_value)) {
-                        error_log(sprintf('DEBUG: Value %s is numeric, trying to get term by ID for product taxonomy.', $attribute_value));
-                        $term = get_term_by('id', (int)$attribute_value, $attribute_obj->get_name());
-                        if ($term && !is_wp_error($term)) {
-                            error_log(sprintf('DEBUG: Found term by ID for product taxonomy: %s', $term->name));
-                            return $term->name;
-                        } else {
-                            error_log(sprintf('DEBUG: Term not found by ID for product taxonomy %s, value %s. Error: %s', $attribute_obj->get_name(), $attribute_value, is_wp_error($term) ? $term->get_error_message() : 'Not found'));
-                        }
-                    }
-                    // Tenta buscar pelo nome
-                    error_log(sprintf('DEBUG: Trying to get term by name for product taxonomy %s, value %s.', $attribute_obj->get_name(), $attribute_value));
-                    $term = get_term_by('name', $attribute_value, $attribute_obj->get_name());
+                }
+                
+                if (is_numeric($attribute_value)) {
+                    $term = get_term_by('id', (int)$attribute_value, $attribute_obj->get_name());
                     if ($term && !is_wp_error($term)) {
-                        error_log(sprintf('DEBUG: Found term by name for product taxonomy: %s', $term->name));
                         return $term->name;
-                    } else {
-                        error_log(sprintf('DEBUG: Term not found by name for product taxonomy %s, value %s. Error: %s', $attribute_obj->get_name(), $attribute_value, is_wp_error($term) ? $term->get_error_message() : 'Not found'));
                     }
                 }
+                
+                $term = get_term_by('name', $attribute_value, $attribute_obj->get_name());
+                if ($term && !is_wp_error($term)) {
+                    return $term->name;
+                }
             } else {
-                // Se for um atributo personalizado (não taxonomia), o valor já é o nome
-                // ou o valor cru que deve ser usado diretamente.
-                error_log(sprintf('DEBUG: Attribute %s is NOT a taxonomy. Returning original value: %s', $attribute_key, $attribute_value));
                 return $attribute_value;
             }
-        } else {
-            error_log(sprintf('DEBUG: Attribute key %s NOT found in product attributes.', $attribute_key));
         }
 
-        // Se todas as tentativas falharem, retorna o valor original
-        error_log(sprintf('DEBUG: All attempts failed for %s. Returning fallback: %s', $attribute_key, $pretty_name));
         return $pretty_name;
     }
 
@@ -247,7 +198,7 @@ class WC_Google_Feed_XML {
         echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         echo '<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">' . "\n";
         echo '<channel>' . "\n";
-        echo '<link>' . $this->safe_xml_escape(home_url( )) . '</link>' . "\n";
+        echo '<link>' . $this->safe_xml_escape(home_url()) . '</link>' . "\n";
         echo '<title>' . $this->safe_xml_escape(get_bloginfo('name')) . '</title>' . "\n";
         echo '<description>' . $this->safe_xml_escape(get_bloginfo('description')) . '</description>' . "\n";
     }
@@ -270,20 +221,90 @@ class WC_Google_Feed_XML {
             return;
         }
         
-        $dados = $this->get_product_data($produto);
+        // Detectar se é variação
+        $is_variation = $produto->is_type('variation');
+        $parent_id = $produto->get_parent_id();
+        $parent_product = null;
+        
+        if ($is_variation && $parent_id) {
+            $parent_product = wc_get_product($parent_id);
+        }
+        
+        $dados = $this->get_product_data($produto, $parent_product, $is_variation, $parent_id);
+        
+        // Processar atributos de cor e tamanho ANTES de montar o título
+        if ($is_variation) {
+            $attributes = $produto->get_variation_attributes();
+
+            foreach ($attributes as $key => $value) {
+                if (empty($value)) continue;
+
+                $pretty_name = $this->get_attribute_pretty_name($produto, $key, $value);
+
+                if (stripos($key, 'tamanho') !== false || stripos($key, 'size') !== false) {
+                    $dados['size'] = $pretty_name;
+                } elseif (stripos($key, 'cor') !== false || stripos($key, 'color') !== false) {
+                    $dados['color'] = $pretty_name;
+                }
+            }
+        } elseif ($produto->is_type('variable')) {
+            $attributes = $produto->get_attributes();
+
+            foreach ($attributes as $key => $attribute_obj) {
+                if (!$attribute_obj->get_variation()) continue;
+
+                $options = $attribute_obj->get_options();
+                if (empty($options)) continue;
+
+                $value = $options[0];
+                $pretty_name = $this->get_attribute_pretty_name($produto, $key, $value);
+
+                if (stripos($key, 'tamanho') !== false || stripos($key, 'size') !== false) {
+                    $dados['size'] = $pretty_name;
+                } elseif (stripos($key, 'cor') !== false || stripos($key, 'color') !== false) {
+                    $dados['color'] = $pretty_name;
+                }
+            }
+        }
+        
+        // Montar título com variantes se configurado
+        $titulo = $dados['titulo'];
+        $title_variants = get_option("wc_google_feed_title_variants", "disabled");
+        
+        if ($title_variants !== "disabled") {
+            $variant_parts = array();
+            
+            // Adicionar cor se disponível e configurado
+            if (in_array($title_variants, array("color_size", "color_only")) && !empty($dados['color'])) {
+                $variant_parts[] = $dados['color'];
+            }
+            
+            // Adicionar tamanho se disponível e configurado
+            if (in_array($title_variants, array("color_size", "size_only")) && !empty($dados['size'])) {
+                $variant_parts[] = $dados['size'];
+            }
+            
+            // Formatar: "Título, Cor - Tamanho" ou "Título, Cor" ou "Título - Tamanho"
+            if (!empty($variant_parts)) {
+                if (count($variant_parts) === 2) {
+                    $titulo .= ', ' . $variant_parts[0] . ' - ' . $variant_parts[1];
+                } elseif ($title_variants === "color_only" || ($title_variants === "color_size" && !empty($dados['color']) && empty($dados['size']))) {
+                    $titulo .= ', ' . $variant_parts[0];
+                } else {
+                    $titulo .= ' - ' . $variant_parts[0];
+                }
+            }
+        }
         
         echo '<item>' . "\n";
-        echo '<title>' . $this->safe_xml_escape($dados['titulo']) . '</title>' . "\n";
+        echo '<title>' . $this->safe_xml_escape($titulo) . '</title>' . "\n";
         echo '<link>' . $this->safe_xml_escape($dados['link']) . '</link>' . "\n";
         echo '<description>' . $this->safe_xml_escape($dados['descricao']) . '</description>' . "\n";
         
-        // Lógica para g:id e g:item_group_id
-        if ($produto->is_type('variation')) {
-            // Se for uma variação, o ID é o da variação e item_group_id é o do produto pai
+        if ($is_variation) {
             echo '<g:id>' . $produto->get_id() . '</g:id>' . "\n";
-            echo '<g:item_group_id>' . $produto->get_parent_id() . '</g:item_group_id>' . "\n";
+            echo '<g:item_group_id>' . $parent_id . '</g:item_group_id>' . "\n";
         } else {
-            // Se for um produto simples ou o produto pai em modo 'parent_only'
             echo '<g:id>' . $produto->get_id() . '</g:id>' . "\n";
         }
         
@@ -300,44 +321,8 @@ class WC_Google_Feed_XML {
         echo '<g:condition>new</g:condition>' . "\n";
         echo '<g:brand>' . $this->safe_xml_escape(get_bloginfo('name')) . '</g:brand>' . "\n";
         
-        if ($dados['stock_quantity']) {
+        if (!empty($dados['stock_quantity'])) {
             echo '<g:quantity>' . $dados['stock_quantity'] . '</g:quantity>' . "\n";
-        }
-
-        $variation_mode = get_option("wc_google_feed_variation_mode", "parent_only");
-
-        if ($produto->is_type('variation')) {
-            $attributes = $produto->get_variation_attributes();
-
-            foreach ($attributes as $key => $value) {
-                if (empty($value)) continue;
-
-                $pretty_name = $this->get_attribute_pretty_name($produto, $key, $value);
-
-                if (stripos($key, 'tamanho') !== false) {
-                    $dados['size'] = $pretty_name;
-                } elseif (stripos($key, 'cor') !== false) {
-                    $dados['color'] = $pretty_name;
-                }
-            }
-        } elseif ($produto->is_type('variable')) {
-            $attributes = $produto->get_attributes();
-
-            foreach ($attributes as $key => $attribute_obj) {
-                if (!$attribute_obj->get_variation()) continue;
-
-                $options = $attribute_obj->get_options();
-                if (empty($options)) continue;
-
-                $value = $options[0];
-                $pretty_name = $this->get_attribute_pretty_name($produto, $key, $value);
-
-                if (stripos($key, 'tamanho') !== false) {
-                    $dados['size'] = $pretty_name;
-                } elseif (stripos($key, 'cor') !== false) {
-                    $dados['color'] = $pretty_name;
-                }
-            }
         }
         
         if (!empty($dados["color"])) {
@@ -380,14 +365,14 @@ class WC_Google_Feed_XML {
             echo '<g:product_type>' . $this->safe_xml_escape($dados['categoria_principal']) . '</g:product_type>' . "\n";
         }
         
-        if ($dados['imagem_url']) {
+        if (!empty($dados['imagem_url'])) {
             echo '<g:image_link>' . $this->safe_xml_escape($dados['imagem_url']) . '</g:image_link>' . "\n";
         }
 
         $image_mode = get_option("wc_google_feed_image_mode", "first_image_only");
 
         if ($image_mode === "all_images") {
-            $additional_images = $this->get_product_gallery_image_urls($produto);
+            $additional_images = $this->get_product_gallery_image_urls($produto, $parent_product);
             foreach ($additional_images as $additional_image_url) {
                 echo '<g:additional_image_link>' . $this->safe_xml_escape($additional_image_url) . '</g:additional_image_link>' . "\n";
             }
@@ -399,16 +384,30 @@ class WC_Google_Feed_XML {
     /**
      * Obter dados do produto
      */
-    private function get_product_data($produto) {
+    private function get_product_data($produto, $parent_product, $is_variation, $parent_id) {
         $dados = array();
         
+        // ID para buscar metadados (sempre do pai se for variação)
+        $search_id = $parent_id ? $parent_id : $produto->get_id();
+        
+        // Título
         $dados['titulo'] = $produto->get_name() ? $produto->get_name() : '';
-        $dados["descricao"] = wp_strip_all_tags($produto->get_description());
+        
+        // Descrição: SEMPRE pegar do pai se for variação
+        if ($is_variation && $parent_product) {
+            $dados["descricao"] = wp_strip_all_tags($parent_product->get_description());
+        } else {
+            $dados["descricao"] = wp_strip_all_tags($produto->get_description());
+        }
 
+        // Link
         $dados['link'] = get_permalink($produto->get_id());
+        
+        // Preços
         $dados['preco'] = $produto->get_price() ? $produto->get_price() : '';
         $dados['preco_regular'] = $produto->get_regular_price() ? $produto->get_regular_price() : '';
         $dados['preco_promocional'] = $produto->get_sale_price() ? $produto->get_sale_price() : '';
+        
         if ($produto->is_type('variable')) {
             $prices = $produto->get_variation_prices(true);
             if (!empty($prices['price'])) {
@@ -421,24 +420,45 @@ class WC_Google_Feed_XML {
                 $dados['preco_promocional'] = min($prices['sale_price']);
             }
         }
+        
+        // SKU
         $dados['sku'] = $produto->get_sku() ? $produto->get_sku() : '';
+        
+        // Status do estoque
         $dados['status_estoque'] = $produto->get_stock_status();
         
-        $stock_quantity = get_post_meta($produto->get_id(), "woodmart_total_stock_quantity", true);
-        $dados['stock_quantity'] = $stock_quantity ? $stock_quantity : '';
+        // Quantidade: SEMPRE pegar do pai se for variação
+        if ($is_variation && $parent_id) {
+            $stock_quantity = get_post_meta($parent_id, "woodmart_total_stock_quantity", true);
+        } else {
+            $stock_quantity = get_post_meta($produto->get_id(), "woodmart_total_stock_quantity", true);
+        }
+        $dados['stock_quantity'] = !empty($stock_quantity) ? $stock_quantity : '';
         
-        $dados['gtin'] = $this->get_product_gtin($produto);
+        // GTIN: Verificar na variação, se vazio, buscar no pai
+        $gtin = $this->get_product_gtin($produto);
+        if (empty($gtin) && $parent_product) {
+            $gtin = $this->get_product_gtin($parent_product);
+        }
+        $dados['gtin'] = $gtin;
         
-        $parent_id = $produto->get_parent_id();
-        $search_id = $parent_id ? $parent_id : $produto->get_id();
-        
+        // Metadados do Google (sempre do pai se for variação)
         $dados['google_category'] = get_post_meta($search_id, '_google_product_category', true);
         $dados['gender'] = get_post_meta($search_id, '_google_product_gender', true);
         $dados['age_group'] = get_post_meta($search_id, '_google_product_age_group', true);
         $dados['material'] = get_post_meta($search_id, '_google_product_material', true);
         $dados['pattern'] = get_post_meta($search_id, '_google_product_pattern', true);
+        
+        // Imagem
         $dados['imagem_url'] = $this->get_product_image_url($produto);
-        $dados['categoria_principal'] = $this->get_product_category($produto);
+        
+        // Categoria: SEMPRE pegar do pai se for variação
+        if ($is_variation && $parent_id) {
+            $categorias = wp_get_post_terms($parent_id, 'product_cat');
+        } else {
+            $categorias = wp_get_post_terms($produto->get_id(), 'product_cat');
+        }
+        $dados['categoria_principal'] = !empty($categorias) && !is_wp_error($categorias) ? $categorias[0]->name : '';
         
         return $dados;
     }
@@ -482,7 +502,18 @@ class WC_Google_Feed_XML {
      */
     private function get_product_category($produto) {
         $categorias = wp_get_post_terms($produto->get_id(), 'product_cat');
-        if (!empty($categorias)) {
+        if (!empty($categorias) && !is_wp_error($categorias)) {
+            return $categorias[0]->name;
+        }
+        return '';
+    }
+    
+    /**
+     * Obter categoria principal do produto por ID
+     */
+    private function get_product_category_by_id($product_id) {
+        $categorias = wp_get_post_terms($product_id, 'product_cat');
+        if (!empty($categorias) && !is_wp_error($categorias)) {
             return $categorias[0]->name;
         }
         return '';
@@ -490,22 +521,26 @@ class WC_Google_Feed_XML {
 
     /**
      * Obter URLs das imagens da galeria do produto
+     * Google Shopping aceita no máximo 10 imagens adicionais
      */
-    private function get_product_gallery_image_urls($produto) {
+    private function get_product_gallery_image_urls($produto, $parent_product = null) {
         $image_urls = array();
         $gallery_image_ids = $produto->get_gallery_image_ids();
 
-        // Se for uma variação e não tiver imagens de galeria próprias, tenta pegar do produto pai
-        if ($produto->is_type("variation") && empty($gallery_image_ids)) {
-            $parent_product = wc_get_product($produto->get_parent_id());
-            if ($parent_product) {
-                $gallery_image_ids = $parent_product->get_gallery_image_ids();
-            }
+        // Se não tiver imagens de galeria próprias, pega do produto pai
+        if (empty($gallery_image_ids) && $parent_product) {
+            $gallery_image_ids = $parent_product->get_gallery_image_ids();
         }
 
         if (!empty($gallery_image_ids)) {
+            // Limitar a 10 imagens (limite do Google Shopping)
+            $gallery_image_ids = array_slice($gallery_image_ids, 0, 10);
+            
             foreach ($gallery_image_ids as $image_id) {
-                $image_urls[] = wp_get_attachment_image_url($image_id, "full");
+                $url = wp_get_attachment_image_url($image_id, "full");
+                if ($url) {
+                    $image_urls[] = $url;
+                }
             }
         }
         return $image_urls;

@@ -1,4 +1,57 @@
-/* Estilos para a página de produtos do Google Feed */
+/**
+ * WooCommerce Google Feed - Admin Styles
+ * 
+ * @package WC_Google_Feed
+ * @version 1.1.0
+ */
+
+/* ==========================================================================
+   Loading Indicator (usado em todas as páginas)
+   ========================================================================== */
+
+/* Select2 - Borda no dropdown */
+.select2-dropdown {
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #2271b1;
+}
+
+.google-feed-loading,
+.smart-fill-loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+}
+
+.google-feed-loading .spinner,
+.smart-fill-loading .spinner {
+    float: none;
+    margin: 0 auto 10px;
+    visibility: visible;
+}
+
+.google-feed-loading p,
+.smart-fill-loading p {
+    margin: 0;
+}
+
+/* ==========================================================================
+   Página de Produtos - Tabela
+   ========================================================================== */
+
+.wc-google-feed-products-table {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.wc-google-feed-products-table.loaded {
+    opacity: 1;
+}
+
 .wc-google-feed-products-table img {
     max-width: 40px !important;
     max-height: 40px !important;
@@ -49,4 +102,274 @@
     color: #999;
     border-radius: 4px;
     margin: 0 auto;
+}
+
+/* ==========================================================================
+   Inputs e Selects Customizados
+   ========================================================================== */
+
+.google-input {
+    height: 28px;
+    padding: 0 8px;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.google-input:focus {
+    border-color: #5897fb;
+    outline: none;
+}
+
+/* ==========================================================================
+   Preenchimento Inteligente - Layout Principal
+   ========================================================================== */
+
+#rules-container {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+#rules-container.loaded {
+    opacity: 1;
+}
+
+/* ==========================================================================
+   Preenchimento Inteligente - Tabs
+   ========================================================================== */
+
+.nav-tab-wrapper {
+    margin-bottom: 0;
+}
+
+.tab-content {
+    display: none;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-top: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* ==========================================================================
+   Preenchimento Inteligente - Regras
+   ========================================================================== */
+
+.rule-item {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+
+.rule-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: #f9f9f9;
+    border-bottom: 1px solid #ccd0d4;
+}
+
+.rule-title {
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.rule-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.rule-remove {
+    color: #b32d2e;
+    cursor: pointer;
+}
+
+.rule-remove:hover {
+    color: #a00;
+}
+
+.rule-test .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+}
+
+/* ==========================================================================
+   Preenchimento Inteligente - Preview de Regra
+   ========================================================================== */
+
+.rule-preview {
+    padding: 10px 15px;
+    background: #f0f6fc;
+    border-bottom: 1px solid #ccd0d4;
+}
+
+.rule-preview .preview-count {
+    font-weight: 600;
+    color: #0073aa;
+}
+
+.rule-preview .preview-products {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #666;
+}
+
+.rule-preview .preview-products ul {
+    margin: 5px 0 0 20px;
+    padding: 0;
+}
+
+.rule-preview .preview-products li {
+    margin-bottom: 3px;
+}
+
+/* ==========================================================================
+   Preenchimento Inteligente - Campos da Regra
+   ========================================================================== */
+
+.rule-fields {
+    margin: 0;
+}
+
+.rule-fields th {
+    width: 180px;
+    padding: 15px 10px 15px 15px;
+}
+
+.rule-fields td {
+    padding: 15px 15px 15px 10px;
+}
+
+/* ==========================================================================
+   Preenchimento Inteligente - Botões de Ação
+   ========================================================================== */
+
+#add-rule .dashicons {
+    margin-right: 5px;
+}
+
+#apply-rules .dashicons {
+    margin-right: 5px;
+}
+
+.smart-fill-actions {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #ccd0d4;
+}
+
+.smart-fill-actions .button-primary {
+    margin-right: 10px;
+}
+
+/* ==========================================================================
+   Preenchimento Inteligente - Resultado
+   ========================================================================== */
+
+#apply-result {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 4px;
+    display: none;
+}
+
+#apply-result.success {
+    display: block;
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+#apply-result.error {
+    display: block;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+#apply-result ul {
+    margin: 5px 0 0 20px;
+    padding: 0;
+}
+
+/* ==========================================================================
+   Preenchimento Inteligente - Histórico
+   ========================================================================== */
+
+.history-table {
+    width: 100%;
+}
+
+.history-table th,
+.history-table td {
+    padding: 10px;
+    text-align: left;
+}
+
+.history-table .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.history-table .badge-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+/* ==========================================================================
+   Preenchimento Inteligente - Import/Export
+   ========================================================================== */
+
+.import-export-container {
+    max-width: 800px;
+}
+
+.import-export-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+}
+
+.import-export-section h3 {
+    margin-top: 0;
+}
+
+.export-section,
+.import-section {
+    margin-bottom: 20px;
+}
+
+#export-json,
+#import-json {
+    width: 100%;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+/* ==========================================================================
+   Animações
+   ========================================================================== */
+
+.dashicons.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
 }

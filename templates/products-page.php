@@ -77,14 +77,6 @@ if ($filter_attributes === "missing_attributes") {
 
 $produtos = get_posts($args);
 $total_produtos = count(get_posts($total_args));
-
-// Total de produtos para paginação
-$total_args = array(
-    'post_type' => 'product',
-    'post_status' => 'publish',
-    'posts_per_page' => -1
-);
-$total_produtos = count(get_posts($total_args));
 $total_pages = ceil($total_produtos / $per_page);
 
 // Carregar categorias do Google
@@ -115,6 +107,12 @@ $google_categories = WC_Google_Feed_Taxonomy::get_categories();
             <p><?php printf(__('Total de produtos: %d | Página %d de %d', 'wc-google-feed'), $total_produtos, $current_page, $total_pages); ?></p>
         </div>
     </form>
+    
+    <!-- Loading indicator -->
+    <div class="google-feed-loading">
+        <span class="spinner is-active"></span>
+        <p><?php _e('Carregando produtos...', 'wc-google-feed'); ?></p>
+    </div>
     
     <form method="post" action="">
         <?php wp_nonce_field('wc_google_feed_products', 'wc_google_feed_products_nonce'); ?>
@@ -155,17 +153,17 @@ $google_categories = WC_Google_Feed_Taxonomy::get_categories();
                         <small>ID: <?php echo $produto_post->ID; ?> | <?php echo $produto->get_price_html(); ?></small>
                     </td>
                     <td>
-                        <select name="products[<?php echo $produto_post->ID; ?>][category]" style="width: 100%;">
+                        <select name="products[<?php echo $produto_post->ID; ?>][category]" class="google-category-select" style="width: 100%;">
                             <option value=""><?php _e('-- Selecione --', 'wc-google-feed'); ?></option>
-                            <?php foreach ($google_categories as $id => $name): ?>
-                                <option value="<?php echo esc_attr($id); ?>" <?php selected($current_category, $id); ?>>
-                                    <?php echo esc_html($name); ?>
+                            <?php if (!empty($current_category) && isset($google_categories[$current_category])): ?>
+                                <option value="<?php echo esc_attr($current_category); ?>" selected>
+                                    <?php echo esc_html($google_categories[$current_category]); ?>
                                 </option>
-                            <?php endforeach; ?>
+                            <?php endif; ?>
                         </select>
                     </td>
                     <td>
-                        <select name="products[<?php echo $produto_post->ID; ?>][gender]" style="width: 100%;">
+                        <select name="products[<?php echo $produto_post->ID; ?>][gender]" class="google-select" style="width: 100%;">
                             <option value=""><?php _e('-- Selecione --', 'wc-google-feed'); ?></option>
                             <option value="male" <?php selected($current_gender, 'male'); ?>><?php _e('Masculino', 'wc-google-feed'); ?></option>
                             <option value="female" <?php selected($current_gender, 'female'); ?>><?php _e('Feminino', 'wc-google-feed'); ?></option>
@@ -173,7 +171,7 @@ $google_categories = WC_Google_Feed_Taxonomy::get_categories();
                         </select>
                     </td>
                     <td>
-                        <select name="products[<?php echo $produto_post->ID; ?>][age_group]" style="width: 100%;">
+                        <select name="products[<?php echo $produto_post->ID; ?>][age_group]" class="google-select" style="width: 100%;">
                             <option value=""><?php _e('-- Selecione --', 'wc-google-feed'); ?></option>
                             <option value="newborn" <?php selected($current_age_group, 'newborn'); ?>><?php _e('Recém-nascido', 'wc-google-feed'); ?></option>
                             <option value="infant" <?php selected($current_age_group, 'infant'); ?>><?php _e('Bebê', 'wc-google-feed'); ?></option>
@@ -184,11 +182,11 @@ $google_categories = WC_Google_Feed_Taxonomy::get_categories();
                     </td>
                     <td>
                         <?php $current_material = get_post_meta($produto_post->ID, '_google_product_material', true); ?>
-                        <input type="text" name="products[<?php echo $produto_post->ID; ?>][material]" value="<?php echo esc_attr($current_material); ?>" style="width: 100%;">
+                        <input type="text" name="products[<?php echo $produto_post->ID; ?>][material]" value="<?php echo esc_attr($current_material); ?>" class="google-input" placeholder="<?php _e('Ex: Algodão', 'wc-google-feed'); ?>" style="width: 100%;">
                     </td>
                     <td>
                         <?php $current_pattern = get_post_meta($produto_post->ID, '_google_product_pattern', true); ?>
-                        <input type="text" name="products[<?php echo $produto_post->ID; ?>][pattern]" value="<?php echo esc_attr($current_pattern); ?>" style="width: 100%;">
+                        <input type="text" name="products[<?php echo $produto_post->ID; ?>][pattern]" value="<?php echo esc_attr($current_pattern); ?>" class="google-input" placeholder="<?php _e('Ex: Listrado', 'wc-google-feed'); ?>" style="width: 100%;">
                     </td>
                 </tr>
                 <?php endforeach; ?>
